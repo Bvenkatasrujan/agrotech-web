@@ -1,0 +1,8 @@
+state,district,market,commodity,variety,arrival_date,min_price,max_price,modal_price
+Maharashtra,Pune,Pune,Onion,Red,16/12/2025,1200,2500,1800
+Maharashtra,Pune,Pune,Potato,Local,16/12/2025,900,1600,1200
+Maharashtra,Nashik,Lasalgaon,Onion,Red,16/12/2025,1100,2400,1750
+Punjab,Ludhiana,Ludhiana,Wheat,Dara,16/12/2025,2100,2300,2200
+Karnataka,Bangalore,Bangalore,Tomato,Hybrid,16/12/2025,800,1500,1100
+Maharashtra,Pune,Pune,Onion,Red,17/12/2025,1250,2550,1900
+Maharashtra,Pune,Pune,Potato,Local,17/12/2025,950,1650,1250
