@@ -1,7 +1,7 @@
 export const APP_CONSTANTS = {
     appName: 'Agritech AI',
-    dataGovApiKey: '579b464db66ec23bdd0000010ec430f8f25e472056671e19065b7324',
-    geminiApiKey: 'AIzaSyCMk4ZQukvLp8WcwtPAbCp6PDFLhO8ESMY',
+    dataGovApiKey: import.meta.env.VITE_DATA_GOV_API_KEY,
+    geminiApiKey: import.meta.env.VITE_GEMINI_API_KEY,
     indianStates: [
         'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
         'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
