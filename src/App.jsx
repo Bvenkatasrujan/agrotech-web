@@ -11,14 +11,14 @@ import DiseaseDetection from './pages/features/DiseaseDetection';
 import Forecast from './pages/features/Forecast';
 import AboutUs from './pages/AboutUs';
 import WhyAi from './pages/WhyAi';
-import MouseTrail from './components/MouseTrail';
+
 
 function App() {
   const isAuthenticated = localStorage.getItem('user_session') !== null;
 
   return (
     <>
-      <MouseTrail />
+
       <Router>
         <Routes>
           <Route path="/" element={<LandingPage />} />
