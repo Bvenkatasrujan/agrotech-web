@@ -52,8 +52,8 @@ export default function Navbar() {
                             </Link>
                         ))}
 
-                        <div className="flex items-center bg-white/10 hover:bg-white/20 rounded-full px-4 py-1.5 ml-4 border border-white/20 transition-all shadow-inner">
-                            <span className="text-[10px] uppercase font-black text-white/70 mr-3 hidden lg:block tracking-widest">Language</span>
+                        <div className="flex items-center bg-white/10 hover:bg-white/20 rounded-lg px-3 py-2 ml-4 border border-white/30 transition-all">
+                            <span className="text-[10px] uppercase font-bold text-white mr-2 hidden lg:block tracking-wider">Language</span>
                             <div id="google_translate_element"></div>
                         </div>
 

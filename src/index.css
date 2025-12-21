@@ -12,42 +12,72 @@ body {
 
 /* Hide the "Powered by Google" and unwanted elements */
 .goog-logo-link,
-.goog-te-gadget span,
 .goog-te-banner-frame,
 #goog-gt-tt,
 .skiptranslate>iframe {
   display: none !important;
 }
 
-.goog-te-gadget {
-  color: transparent !important;
-  font-size: 0 !important;
+/* Hide only the "Powered by" text, not the whole gadget */
+.goog-te-gadget>span>a {
+  display: none !important;
 }
 
-/* Custom Dropdown Styling */
+.goog-te-gadget>span {
+  display: none !important;
+}
+
+/* Keep the select dropdown visible */
+.goog-te-gadget .goog-te-combo {
+  display: inline-block !important;
+}
+
+/* Custom Dropdown Styling - Enhanced */
 .goog-te-combo {
-  background-color: #1b5e20 !important;
+  background-color: rgba(255, 255, 255, 0.15) !important;
   color: white !important;
-  border: none !important;
-  border-radius: 6px !important;
-  padding: 2px 24px 2px 8px !important;
-  font-family: inherit !important;
-  font-size: 11px !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 8px !important;
+  padding: 6px 32px 6px 12px !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  font-size: 13px !important;
   font-weight: 600 !important;
   outline: none !important;
   cursor: pointer !important;
   transition: all 0.3s ease !important;
   appearance: none !important;
   -webkit-appearance: none !important;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255,255,255,0.7)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
   background-repeat: no-repeat !important;
-  background-position: right 4px center !important;
-  background-size: 12px !important;
-  height: 24px !important;
-  min-width: 130px !important;
+  background-position: right 8px center !important;
+  background-size: 14px !important;
+  height: 36px !important;
+  min-width: 140px !important;
+  line-height: 1.2 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
 }
 
 .goog-te-combo:hover {
+  background-color: rgba(255, 255, 255, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.goog-te-combo:focus {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  border-color: white !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Dropdown options styling */
+.goog-te-combo option {
+  background-color: #1b5e20 !important;
+  color: white !important;
+  padding: 8px !important;
+  font-size: 14px !important;
+}
+
+.goog-te-combo option:hover {
   background-color: #2e7d32 !important;
 }
 
@@ -72,8 +102,10 @@ body {
 /* Mobile adjustments */
 @media (max-width: 768px) {
   .goog-te-combo {
-    min-width: 100px !important;
-    font-size: 10px !important;
+    min-width: 110px !important;
+    font-size: 12px !important;
+    padding: 5px 28px 5px 10px !important;
+    height: 32px !important;
   }
 }
 
