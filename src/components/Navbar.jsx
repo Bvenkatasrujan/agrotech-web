@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Sprout, Menu, X, User, LogOut, ChevronLeft } from 'lucide-react';
+import { Sprout, Menu, X, User, LogOut, ChevronLeft, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { dataService } from '../services/dataService';
 
@@ -25,7 +25,8 @@ export default function Navbar() {
         { name: 'Soil Quality', to: '/soil-quality' },
         { name: 'Price Prediction', to: '/price-prediction' },
         { name: 'Forecast', to: '/forecast' },
-        { name: 'Disease', to: '/disease-detection' },
+        { name: 'Disease Detection', to: '/disease-detection' },
+        { name: 'Help', to: '/help' },
     ];
 
     return (
@@ -51,12 +52,12 @@ export default function Navbar() {
                             </Link>
                         ))}
 
-                        <div className="flex items-center bg-green-800/50 rounded-lg px-2 py-1 ml-2 border border-green-600/30">
-                            <span className="text-[10px] uppercase font-bold text-green-200 mr-2 hidden lg:block">Lang:</span>
+                        <div className="flex items-center bg-white/10 hover:bg-white/20 rounded-full px-4 py-1.5 ml-4 border border-white/20 transition-all shadow-inner">
+                            <span className="text-[10px] uppercase font-black text-white/70 mr-3 hidden lg:block tracking-widest">Language</span>
                             <div id="google_translate_element"></div>
                         </div>
 
-                        <div className="ml-4 pl-4 border-l border-green-600">
+                        <div className="ml-4 pl-4 border-l border-green-600 flex-shrink-0">
                             {user ? (
                                 <div className="flex items-center gap-4">
                                     <Link to="/dashboard" className="flex items-center gap-2 hover:bg-green-700 px-3 py-2 rounded-lg transition">
@@ -79,7 +80,7 @@ export default function Navbar() {
                             ) : (
                                 <Link
                                     to="/login"
-                                    className="bg-white text-agri-green px-6 py-2 rounded-full font-bold hover:bg-green-50 transition-colors shadow-sm"
+                                    className="bg-white text-agri-green px-6 py-2 rounded-full font-bold hover:bg-green-50 transition-colors shadow-sm whitespace-nowrap inline-block"
                                 >
                                     Log In
                                 </Link>
@@ -125,6 +126,13 @@ export default function Navbar() {
                                 {link.name}
                             </Link>
                         ))}
+
+                        <div className="pt-4 mt-4 border-t border-green-700/50">
+                            <p className="text-[10px] uppercase font-black text-green-200 mb-3 ml-4 tracking-widest">Select Language</p>
+                            <div className="px-4">
+                                <div id="google_translate_element_mobile"></div>
+                            </div>
+                        </div>
 
                         {!user && (
                             <Link

@@ -11,6 +11,7 @@ import DiseaseDetection from './pages/features/DiseaseDetection';
 import Forecast from './pages/features/Forecast';
 import AboutUs from './pages/AboutUs';
 import WhyAi from './pages/WhyAi';
+import Help from './pages/Help';
 
 
 function App() {
@@ -40,6 +41,7 @@ function App() {
           <Route path="/disease-detection" element={<DiseaseDetection />} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/why-ai" element={<WhyAi />} />
+          <Route path="/help" element={<Help />} />
 
         </Routes>
       </Router>
