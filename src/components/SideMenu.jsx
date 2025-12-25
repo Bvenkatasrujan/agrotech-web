@@ -33,9 +33,9 @@ export default function SideMenu({ user }) {
             </div>
 
             <nav className="flex-1 p-4 space-y-2">
-                <NavItem to="/dashboard" icon={<Home />} label="Dashboard" active />
-                <NavItem to="#" icon={<TrendingUp />} label="Mandi Trends" />
-                <NavItem to="#" icon={<User />} label="Profile" />
+                <NavItem to="/dashboard" icon={<Home />} label="Dashboard" active={location.pathname === '/dashboard'} />
+                <NavItem to="/home" icon={<TrendingUp />} label="Home Website" />
+                <NavItem to="/profile" icon={<User />} label="Profile" active={location.pathname === '/profile'} />
             </nav>
 
             <div className="p-4 border-t border-green-700">

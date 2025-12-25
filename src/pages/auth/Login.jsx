@@ -1,81 +1,137 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { dataService } from '../../services/dataService';
-import { Sprout } from 'lucide-react';
+import { Sprout, Mail, Lock, Chrome, ArrowRight, AlertTriangle } from 'lucide-react';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { auth } from '../../services/firebaseConfig';
+import LoginBg from '../../assets/login-bg.png';
 
 export default function Login() {
-    const [formData, setFormData] = useState({ name: '', password: '' });
+    const [formData, setFormData] = useState({ email: '', password: '' });
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleGoogleLogin = async () => {
+        const provider = new GoogleAuthProvider();
+        try {
+            const result = await signInWithPopup(auth, provider);
+            console.log("Google user:", result.user);
+            localStorage.setItem('user_session', JSON.stringify(result.user));
+            navigate("/registration-details");
+        } catch (error) {
+            console.error("Google Sign-In Error", error);
+            setError(error.message.replace('Firebase: ', ''));
+        }
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        const result = dataService.loginUser(formData.name, formData.password);
-        if (result.success) {
-            // Force reload to update auth state context if needed, or just navigate
-            navigate('/dashboard');
-        } else {
-            setError(result.message);
+        setLoading(true);
+        setError('');
+
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+            const user = userCredential.user;
+
+            if (!user.emailVerified) {
+                alert("Please verify your email before login.");
+                await auth.signOut();
+                setLoading(false);
+                return;
+            }
+
+            console.log("Login successful");
+            localStorage.setItem('user_session', JSON.stringify(user));
+            navigate("/registration-details");
+
+        } catch (error) {
+            console.error("Login Error:", error);
+            setError(error.message.replace('Firebase: ', ''));
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-agri-light flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
-                <div className="flex flex-col items-center mb-6">
-                    <div className="bg-agri-green p-3 rounded-full mb-3">
-                        <Sprout className="w-8 h-8 text-white" />
-                    </div>
-                    <h1 className="text-2xl font-bold text-gray-800">Agritech AI</h1>
-                    <p className="text-gray-500">Welcome back, Farmer</p>
-                </div>
-
-                {error && (
-                    <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm">
-                        {error}
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                        <input
-                            type="text"
-                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-agri-green focus:border-agri-green"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            required
-                        />
+        <div className="flex min-h-screen font-sans">
+            <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center p-8 sm:p-16 lg:p-24 relative z-10">
+                <div className="w-full max-w-md mx-auto">
+                    <div className="flex items-center gap-2 mb-8 group w-fit">
+                        <div className="bg-gradient-to-br from-green-600 to-green-800 p-2.5 rounded-xl shadow-lg shadow-green-200">
+                            <Sprout className="w-6 h-6 text-white" />
+                        </div>
+                        <span className="text-2xl font-bold text-gray-900 tracking-tight">AgroTech AI</span>
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                        <input
-                            type="password"
-                            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-agri-green focus:border-agri-green"
-                            value={formData.password}
-                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                            required
-                        />
-                    </div>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
+                    <p className="text-gray-500 mb-8">Empowering smart farmers with AI insights.</p>
 
                     <button
-                        type="submit"
-                        className="w-full bg-agri-green text-white py-2 rounded-lg hover:bg-green-700 transition-colors font-semibold"
+                        onClick={handleGoogleLogin}
+                        className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 py-3.5 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 transition-all mb-6"
                     >
-                        Login
+                        <Chrome className="w-5 h-5 text-blue-600" />
+                        Sign in with Google
                     </button>
-                </form>
 
-                <div className="mt-4 text-center">
-                    <p className="text-sm text-gray-600">
-                        New here?{' '}
-                        <Link to="/register" className="text-agri-green font-semibold hover:underline">
-                            Register Account
-                        </Link>
-                    </p>
+                    <div className="relative mb-6">
+                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div>
+                        <div className="relative flex justify-center text-sm"><span className="px-4 bg-white text-gray-400">or continue with email</span></div>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="relative">
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <input type="email" placeholder="Email Address" required
+                                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all"
+                                value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })}
+                            />
+                        </div>
+                        <div className="relative">
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <input type="password" placeholder="Password" required
+                                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all"
+                                value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })}
+                            />
+                        </div>
+
+                        {error && (
+                            <div className="flex items-center gap-2 text-red-600 bg-red-50 p-3 rounded-lg text-sm border border-red-100">
+                                <AlertTriangle className="w-4 h-4" />
+                                {error}
+                            </div>
+                        )}
+
+                        <button type="submit" disabled={loading} className="w-full bg-gray-900 text-white font-bold py-3.5 rounded-xl shadow-lg mt-4 flex items-center justify-center gap-2 hover:bg-gray-800 transition-all">
+                            {loading ? 'Signing in...' : 'Sign In'}
+                            {!loading && <ArrowRight className="w-5 h-5" />}
+                        </button>
+                    </form>
+
+                    <div className="mt-8 text-center bg-gray-50 p-4 rounded-xl">
+                        <p className="text-sm text-gray-500">
+                            Don't have an account?{' '}
+                            <Link to="/register" className="font-bold text-gray-900 hover:underline">
+                                Create Account
+                            </Link>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div className="hidden lg:block w-1/2 bg-gray-900 relative overflow-hidden">
+                <div className="absolute inset-0 bg-green-900/40 mix-blend-multiply z-10"></div>
+                <img
+                    src={LoginBg}
+                    alt="Agricultural Field"
+                    className="absolute inset-0 w-full h-full object-cover opacity-80"
+                />
+                <div className="relative z-20 h-full flex flex-col justify-end p-20 text-white">
+                    <h2 className="text-4xl font-bold mb-4">Precision Agriculture</h2>
+                    <p className="text-lg text-white/80 max-w-md">Access localized weather alerts and real-time mandi prices tailored for your farm's location.</p>
                 </div>
             </div>
         </div>
     );
 }
+

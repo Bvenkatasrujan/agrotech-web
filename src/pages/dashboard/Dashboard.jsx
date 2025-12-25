@@ -1,46 +1,49 @@
 import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import SideMenu from '../../components/SideMenu';
 import PriceChart from '../../components/PriceChart';
-import { dataService } from '../../services/dataService';
 import { climateService } from '../../services/climateService';
 import { geminiService } from '../../services/geminiService';
+import { auth } from '../../services/firebaseConfig';
 import { Thermometer, Droplets, Wind, CloudRain, AlertTriangle, ExternalLink, UserCheck } from 'lucide-react';
 
 export default function Dashboard() {
+    const location = useLocation();
+    const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [weather, setWeather] = useState(null);
     const [recommendations, setRecommendations] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // Get registration data from Navigation state (Step 5)
+    const registrationData = location.state || { state: "N/A", city: "N/A", mandal: "N/A" };
+
     useEffect(() => {
         const loadData = async () => {
             try {
-                const currentUser = dataService.getCurrentUser();
-                if (!currentUser) {
-                    window.location.href = '/login';
+                const currentUser = auth.currentUser;
+                if (!currentUser && !localStorage.getItem('user_session')) {
+                    navigate('/login');
                     return;
                 }
-                setUser(currentUser);
 
-                // Fetch weather with fallback
-                const w = await climateService.getWeather(currentUser.city).catch(() => ({
+                const userData = {
+                    name: currentUser?.displayName || "Farmer",
+                    email: currentUser?.email,
+                    city: registrationData.city,
+                    state: registrationData.state,
+                    mandal: registrationData.mandal
+                };
+                setUser(userData);
+
+                // Fetch weather with the localized city
+                const w = await climateService.getWeather(registrationData.city).catch(() => ({
                     temperature: '--', rainfall: '--', humidity: '--', wind: '--', alerts: ['Weather data unavailable']
                 }));
                 setWeather(w);
 
-                // Fetch recommendations with timeout/fallback
-                const recs = {};
-                if (currentUser.cropsGrown && currentUser.cropsGrown.length > 0) {
-                    // Just get for the first crop to ensure fast loading
-                    try {
-                        const crop = currentUser.cropsGrown[0];
-                        recs[crop] = await geminiService.getSellRecommendation(crop);
-                    } catch (e) {
-                        console.error("Failed to fetch recs", e);
-                    }
-                }
-                setRecommendations(recs);
+                setRecommendations({});
             } catch (err) {
                 console.error("Dashboard Load Error:", err);
                 setError("Something went wrong while loading your dashboard.");
@@ -50,7 +53,7 @@ export default function Dashboard() {
         };
 
         loadData();
-    }, []);
+    }, [navigate, registrationData.city, registrationData.state, registrationData.mandal]);
 
     if (loading) return (
         <div className="flex flex-col items-center justify-center h-screen bg-slate-50">
@@ -79,7 +82,9 @@ export default function Dashboard() {
                     <div className="flex justify-between items-start">
                         <div>
                             <h1 className="text-4xl font-black text-slate-800 tracking-tight">Welcome, {user.name}!</h1>
-                            <p className="text-slate-500 text-lg mt-1">Real-time updates for {user.city}, {user.state}</p>
+                            <p className="text-slate-500 text-lg mt-1">
+                                {user.mandal}, {user.city}, {user.state}
+                            </p>
                         </div>
 
                         {/* Compulsory Registration Form Button */}

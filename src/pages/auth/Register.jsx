@@ -1,237 +1,131 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { dataService } from '../../services/dataService';
-import { APP_CONSTANTS } from '../../utils/constants';
-
-// Extended Mock Data for Demo Purposes
-const LOCATION_DATA = {
-    'Andhra Pradesh': {
-        cities: ['Visakhapatnam', 'Vijayawada', 'Guntur', 'Kurnool', 'Nellore', 'Tirupati'],
-        mandis: ['Anakapalle', 'Guntur Yard', 'Kurnool Market', 'Adoni', 'Nellore APMC', 'Tirupati Market']
-    },
-    'Telangana': {
-        cities: ['Hyderabad', 'Warangal', 'Nizamabad', 'Khammam', 'Karimnagar'],
-        mandis: ['Bowenpally', 'Warangal Market', 'Nizamabad Yard', 'Khammam', 'Karimnagar Yard']
-    },
-    'Maharashtra': {
-        cities: ['Mumbai', 'Pune', 'Nashik', 'Nagpur', 'Aurangabad', 'Jalgaon', 'Solapur'],
-        mandis: ['Vashi APMC', 'Pune APMC', 'Lasalgaon', 'Nagpur Market', 'Aurangabad Yard', 'Jalgaon Mandi', 'Solapur Market']
-    },
-    'Punjab': {
-        cities: ['Ludhiana', 'Amritsar', 'Jalandhar', 'Patiala', 'Bathinda'],
-        mandis: ['Khanna', 'Sirhind', 'Rajpura', 'Jalandhar Cantt', 'Bathinda Market']
-    },
-    'Uttar Pradesh': {
-        cities: ['Lucknow', 'Kanpur', 'Varanasi', 'Agra', 'Meerut', 'Prayagraj'],
-        mandis: ['Lucknow Market', 'Kanpur Grain', 'Varanasi Yard', 'Agra Mandi', 'Meerut Yard', 'Prayagraj Mandi']
-    },
-    'Karnataka': {
-        cities: ['Bangalore', 'Mysore', 'Hubli', 'Belgaum', 'Mangalore', 'Shimoga'],
-        mandis: ['Yeshwantpur', 'Mysore APMC', 'Hubli Market', 'Belgaum Yard', 'Mangalore APMC', 'Shimoga Mandi']
-    },
-    'Gujarat': {
-        cities: ['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Unjha', 'Bhavnagar'],
-        mandis: ['Ahmedabad Market', 'Surat APMC', 'Vadodara Yard', 'Rajkot Mandi', 'Unjha Mandi', 'Bhavnagar Yard']
-    },
-    'Madhya Pradesh': {
-        cities: ['Bhopal', 'Indore', 'Gwalior', 'Jabalpur', 'Ujjain'],
-        mandis: ['Bhopal Mandi', 'Indore Yard', 'Gwalior Market', 'Jabalpur APMC', 'Ujjain Yard']
-    },
-    'Rajasthan': {
-        cities: ['Jaipur', 'Jodhpur', 'Kota', 'Udaipur', 'Barmer'],
-        mandis: ['Jaipur Mandi', 'Jodhpur Yard', 'Kota APMC', 'Udaipur Market', 'Barmer Mandi']
-    },
-    'Tamil Nadu': {
-        cities: ['Chennai', 'Coimbatore', 'Madurai', 'Tiruchirappalli', 'Salem'],
-        mandis: ['Koyambedu', 'Coimbatore Market', 'Madurai Yard', 'Trichy Mandi', 'Salem APMC']
-    },
-    'Haryana': {
-        cities: ['Gurgaon', 'Faridabad', 'Ambala', 'Karnal', 'Hisar', 'Rohtak'],
-        mandis: ['Gurugram Mandi', 'Ballabgarh', 'Ambala Cantt', 'Karnal Yard', 'Hisar Market', 'Rohtak Mandi']
-    },
-    'Bihar': {
-        cities: ['Patna', 'Gaya', 'Bhagalpur', 'Muzaffarpur'],
-        mandis: ['Patna Mandi', 'Gaya Yard', 'Bhagalpur Market', 'Muzaffarpur APMC']
-    },
-    'West Bengal': {
-        cities: ['Kolkata', 'Howrah', 'Durgapur', 'Siliguri'],
-        mandis: ['Kolkata Market', 'Howrah Yard', 'Durgapur Mandi', 'Siliguri APMC']
-    },
-    'Kerala': {
-        cities: ['Kochi', 'Thiruvananthapuram', 'Kozhikode', 'Thrissur'],
-        mandis: ['Kochi Market', 'TVM Yard', 'Kozhikode Mandi', 'Thrissur APMC']
-    },
-    'Odisha': {
-        cities: ['Bhubaneswar', 'Cuttack', 'Rourkela', 'Sambalpur'],
-        mandis: ['Bhubaneswar APMC', 'Cuttack Yard', 'Rourkela Market', 'Sambalpur Mandi']
-    },
-    // Default fallback for others
-    'default': {
-        cities: ['District 1', 'District 2', 'District 3'],
-        mandis: ['Local Mandi 1', 'Local Mandi 2']
-    }
-};
-
-const CROP_OPTIONS = [
-    'Rice', 'Wheat', 'Maize', 'Cotton', 'Sugarcane',
-    'Potato', 'Tomato', 'Onion', 'Soybean', 'Groundnut',
-    'Barley', 'Pulses', 'Turmeric', 'Chilli'
-];
+import { Sprout, User, Mail, Lock, ArrowRight, AlertTriangle } from 'lucide-react';
+import { createUserWithEmailAndPassword, sendEmailVerification, updateProfile } from "firebase/auth";
+import { auth } from '../../services/firebaseConfig';
+import LoginBg from '../../assets/login-bg.png';
 
 export default function Register() {
-    const [formData, setFormData] = useState({
-        name: '', password: '', state: '', city: '', preferredMandi: '', cropsGrown: []
-    });
-    const [cities, setCities] = useState([]);
-    const [mandis, setMandis] = useState([]);
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [formData, setFormData] = useState({
+        name: '', email: '', password: '', confirmPassword: ''
+    });
 
-    // Handle State Change
-    const handleStateChange = (e) => {
-        const state = e.target.value;
-        const data = LOCATION_DATA[state] || LOCATION_DATA['default'];
-        setFormData({ ...formData, state, city: '', preferredMandi: '' });
-        setCities(data.cities);
-        setMandis(data.mandis);
-    };
-
-    // Handle Crop Selection (Multi-select)
-    const toggleCrop = (crop) => {
-        if (formData.cropsGrown.includes(crop)) {
-            setFormData({ ...formData, cropsGrown: formData.cropsGrown.filter(c => c !== crop) });
-        } else {
-            // Limit to 4 for UI neatness if needed, or allow all
-            setFormData({ ...formData, cropsGrown: [...formData.cropsGrown, crop] });
-        }
-    };
-
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Validation
-        if (formData.cropsGrown.length === 0) {
-            alert('Please select at least one crop.');
+        setError('');
+
+        if (formData.password !== formData.confirmPassword) {
+            setError("Passwords do not match!");
             return;
         }
 
-        const result = dataService.registerUser(formData);
-        if (result.success) {
-            // Redirect to Home/Dashboard. 
-            // User requested "home page where user name... is in up most side".
-            // We'll go to Dashboard, often the "Home" for users.
-            navigate('/dashboard');
-        } else {
-            alert(result.message);
+        setLoading(true);
+
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+            const user = userCredential.user;
+
+            await updateProfile(user, {
+                displayName: formData.name,
+            });
+
+            await sendEmailVerification(user);
+
+            alert("Verification email sent. Please check your inbox and verify before login.");
+            navigate('/login');
+
+        } catch (error) {
+            console.error("Registration Error:", error);
+            setError(error.message.replace('Firebase: ', ''));
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-agri-light flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-2xl my-8">
-                <h1 className="text-3xl font-bold text-agri-green mb-2 text-center">Join AgroTech AI</h1>
-                <p className="text-gray-500 text-center mb-8">Create your detailed farmer profile</p>
+        <div className="flex min-h-screen font-sans">
+            <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center p-8 sm:p-16 lg:p-24 relative z-10">
+                <div className="w-full max-w-md mx-auto">
+                    <Link to="/login" className="flex items-center gap-2 mb-8 group w-fit">
+                        <div className="bg-gradient-to-br from-green-600 to-green-800 p-2.5 rounded-xl shadow-lg shadow-green-200">
+                            <Sprout className="w-6 h-6 text-white" />
+                        </div>
+                        <span className="text-2xl font-bold text-gray-900 tracking-tight">AgroTech AI</span>
+                    </Link>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Access Details */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-gray-50 rounded-lg">
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Full Name</label>
-                            <input
-                                type="text"
-                                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500"
-                                required
-                                value={formData.name}
-                                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
+                    <p className="text-gray-500 mb-8">Join smart farmers optimizing their yields.</p>
+
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="relative">
+                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <input type="text" placeholder="Full Name" required
+                                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all"
+                                value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
                             />
                         </div>
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1">Password</label>
-                            <input
-                                type="password"
-                                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500"
-                                required
-                                value={formData.password}
-                                onChange={e => setFormData({ ...formData, password: e.target.value })}
+                        <div className="relative">
+                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <input type="email" placeholder="Email Address" required
+                                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all"
+                                value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })}
                             />
                         </div>
-                    </div>
-
-                    {/* Location Details */}
-                    <div>
-                        <h3 className="font-semibold text-gray-700 mb-2 border-b pb-1">Location Details</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label className="block text-xs font-medium text-gray-500 mb-1">State</label>
-                                <select
-                                    className="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-green-500"
-                                    onChange={handleStateChange}
-                                    required
-                                    value={formData.state}
-                                >
-                                    <option value="">Select State</option>
-                                    {APP_CONSTANTS.indianStates.map(s => <option key={s} value={s}>{s}</option>)}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-gray-500 mb-1">City / District</label>
-                                <select
-                                    className="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-green-500"
-                                    onChange={e => setFormData({ ...formData, city: e.target.value })}
-                                    required
-                                    value={formData.city}
-                                    disabled={!formData.state}
-                                >
-                                    <option value="">Select City</option>
-                                    {cities.map(c => <option key={c} value={c}>{c}</option>)}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-gray-500 mb-1">Preferred Mandi</label>
-                                <select
-                                    className="w-full px-3 py-2 border rounded-lg bg-white focus:ring-2 focus:ring-green-500"
-                                    onChange={e => setFormData({ ...formData, preferredMandi: e.target.value })}
-                                    required
-                                    value={formData.preferredMandi}
-                                    disabled={!formData.city}
-                                >
-                                    <option value="">Select Mandi</option>
-                                    {mandis.map(m => <option key={m} value={m}>{m}</option>)}
-                                </select>
-                            </div>
+                        <div className="relative">
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <input type="password" placeholder="Password" required
+                                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all"
+                                value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })}
+                            />
                         </div>
-                    </div>
-
-                    {/* Crop Selection */}
-                    <div>
-                        <h3 className="font-semibold text-gray-700 mb-2 border-b pb-1">Crops Grown</h3>
-                        <div className="grid grid-cols-3 md:grid-cols-5 gap-2 mt-2">
-                            {CROP_OPTIONS.map(crop => (
-                                <div
-                                    key={crop}
-                                    onClick={() => toggleCrop(crop)}
-                                    className={`cursor-pointer px-2 py-2 rounded-lg text-sm text-center border transition-all ${formData.cropsGrown.includes(crop)
-                                        ? 'bg-green-600 text-white border-green-700 shadow-md'
-                                        : 'bg-white text-gray-600 border-gray-200 hover:bg-green-50'
-                                        }`}
-                                >
-                                    {crop}
-                                </div>
-                            ))}
+                        <div className="relative">
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <input type="password" placeholder="Confirm Password" required
+                                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all"
+                                value={formData.confirmPassword} onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
+                            />
                         </div>
-                        <p className="text-xs text-gray-500 mt-2">Selected: {formData.cropsGrown.join(', ') || 'None'}</p>
+
+                        {error && (
+                            <div className="flex items-center gap-2 text-red-600 bg-red-50 p-3 rounded-lg text-sm border border-red-100">
+                                <AlertTriangle className="w-4 h-4" />
+                                {error}
+                            </div>
+                        )}
+
+                        <button type="submit" disabled={loading} className="w-full bg-gray-900 text-white font-bold py-3.5 rounded-xl shadow-lg mt-4 flex items-center justify-center gap-2 hover:bg-gray-800 transition-all">
+                            {loading ? 'Creating Account...' : 'Continue'}
+                            {!loading && <ArrowRight className="w-5 h-5" />}
+                        </button>
+                    </form>
+
+                    <div className="mt-8 text-center bg-gray-50 p-4 rounded-xl">
+                        <p className="text-sm text-gray-500">
+                            Already have an account?{' '}
+                            <Link to="/login" className="font-bold text-gray-900 hover:underline">
+                                Sign In
+                            </Link>
+                        </p>
                     </div>
+                </div>
+            </div>
 
-                    <button
-                        type="submit"
-                        className="w-full bg-agri-green text-white py-4 rounded-xl font-bold text-lg hover:bg-green-800 transition shadow-lg mt-6"
-                    >
-                        Create Account & Login
-                    </button>
-                </form>
-
-                <div className="mt-6 text-center">
-                    <Link to="/login" className="text-sm font-medium text-green-700 hover:underline">Already have an account? Login here</Link>
+            <div className="hidden lg:block w-1/2 bg-gray-900 relative overflow-hidden">
+                <div className="absolute inset-0 bg-green-900/40 mix-blend-multiply z-10"></div>
+                <img
+                    src={LoginBg}
+                    alt="Agricultural Field"
+                    className="absolute inset-0 w-full h-full object-cover opacity-80"
+                />
+                <div className="relative z-20 h-full flex flex-col justify-end p-20 text-white">
+                    <h2 className="text-4xl font-bold mb-4">Empowering Farmers with AI</h2>
+                    <p className="text-lg text-white/80 max-w-md">Join the largest network of smart farmers using technology to predict market trends and improve soil health.</p>
                 </div>
             </div>
         </div>
     );
 }
+

@@ -1,7 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import RegistrationDetails from './pages/auth/RegistrationDetails';
 import Dashboard from './pages/dashboard/Dashboard';
+import Profile from './pages/dashboard/Profile';
 import LandingPage from './pages/LandingPage';
 import CropRecommendation from './pages/features/CropRecommendation';
 import FertilizerRecommendation from './pages/features/FertilizerRecommendation';
@@ -22,14 +24,21 @@ function App() {
 
       <Router>
         <Routes>
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/home" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* Protected Dashboard */}
+          <Route path="/registration-details" element={<RegistrationDetails />} />
+
+          {/* Protected Routes */}
           <Route
             path="/dashboard"
             element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/profile"
+            element={isAuthenticated ? <Profile /> : <Navigate to="/login" />}
           />
 
           {/* Feature Pages (Accessible to all for prototype, or protect if needed) */}
