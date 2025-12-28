@@ -63,21 +63,34 @@ export default function Dashboard() {
                 }));
                 setWeather(w);
 
-                // Fetch AI Recommendations for 4 key Indian crops
+                // Fetch AI Recommendations with Quota Management (Sequential + Caching)
                 try {
-                    const crops = ["Rice", "Wheat", "Maize", "Cotton"];
-                    const recs = {};
+                    const CACHE_KEY = 'ai_recommendations_cache';
+                    const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
 
-                    // Fetch in parallel for speed
-                    await Promise.all(crops.map(async (crop) => {
-                        try {
-                            recs[crop] = await geminiService.getSellRecommendation(crop);
-                        } catch (e) {
-                            recs[crop] = "Recommendation currently unavailable for " + crop;
+                    const cachedData = JSON.parse(localStorage.getItem(CACHE_KEY));
+                    if (cachedData && (Date.now() - cachedData.timestamp < CACHE_EXPIRY)) {
+                        setRecommendations(cachedData.data);
+                    } else {
+                        const crops = ["Rice", "Wheat", "Maize", "Cotton"];
+                        const recs = {};
+
+                        // Sequential fetch to avoid 429 errors
+                        for (const crop of crops) {
+                            try {
+                                recs[crop] = await geminiService.getSellRecommendation(crop);
+                                await new Promise(r => setTimeout(r, 2000)); // 2s gap
+                            } catch (e) {
+                                recs[crop] = "Advice temporarily unavailable.";
+                            }
                         }
-                    }));
 
-                    setRecommendations(recs);
+                        setRecommendations(recs);
+                        localStorage.setItem(CACHE_KEY, JSON.stringify({
+                            data: recs,
+                            timestamp: Date.now()
+                        }));
+                    }
                 } catch (recErr) {
                     console.error("AI Rec Error:", recErr);
                     setRecommendations({

@@ -51,17 +51,31 @@ export const geminiService = {
         const fullPrompt = `${AGRICULTURE_SYSTEM_PROMPT}\nUser question: ${user_input}`;
 
         for (const modelName of modelsToTry) {
-            try {
-                console.log(`Trying Gemini with model: ${modelName}`);
-                const model = ai.getGenerativeModel({ model: modelName });
-                const result = await model.generateContent(fullPrompt);
-                const response = await result.response;
-                return response.text();
-            } catch (error) {
-                console.warn(`Model ${modelName} failed:`, error.message);
-                lastError = error;
-                // Continue to next model regardless of error (might have different quota/status)
-                continue;
+            let retries = 0;
+            const maxRetries = 2;
+
+            while (retries <= maxRetries) {
+                try {
+                    console.log(`Trying Gemini with model: ${modelName} (Attempt ${retries + 1})`);
+                    const model = ai.getGenerativeModel({ model: modelName });
+                    const result = await model.generateContent(fullPrompt);
+                    const response = await result.response;
+                    return response.text();
+                } catch (error) {
+                    const isQuotaError = error.message?.includes("429") || error.message?.toLowerCase().includes("quota");
+
+                    if (isQuotaError && retries < maxRetries) {
+                        retries++;
+                        const waitTime = retries * 3000;
+                        console.warn(`Quota hit for ${modelName}. Retrying in ${waitTime}ms...`);
+                        await new Promise(resolve => setTimeout(resolve, waitTime));
+                        continue;
+                    }
+
+                    console.warn(`Model ${modelName} failed:`, error.message);
+                    lastError = error;
+                    break; // Move to next model
+                }
             }
         }
 
