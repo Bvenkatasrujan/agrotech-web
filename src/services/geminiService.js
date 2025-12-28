@@ -81,7 +81,16 @@ export const geminiService = {
     },
 
     getSellRecommendation: async (crop) => {
-        const prompt = `When is the best time to sell ${crop} in the next 7 days based on general market trends in India? Provide a specific day and a short reason.`;
+        const prompt = `
+            Provide a detailed market analysis for selling ${crop} in India over the next 7 days.
+            Format your response exactly as follows:
+            1. Title: "Recommendation for Selling ${crop} (Next 7 Days)"
+            2. A Markdown table with columns: "| Suggested Selling Day (Based on Trend) | Short Reason |"
+            3. A section titled "Crucial Factors to Monitor Daily" with 3 points (Supply, Price Trend, and Market Conditions).
+            4. A section titled "General Agriculture Market Guidance" with a practical tip on storage or seasonal cycles.
+            
+            Use bold text for emphasis and maintain a professional, helpful tone.
+        `;
         return await geminiService.getPrediction(prompt);
     },
 

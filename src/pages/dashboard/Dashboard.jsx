@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
+import ReactMarkdown from 'react-markdown';
 
 import SideMenu from '../../components/SideMenu';
 import PriceChart from '../../components/PriceChart';
@@ -62,14 +63,21 @@ export default function Dashboard() {
                 }));
                 setWeather(w);
 
-                // Fetch AI Recommendations for common crops in India
+                // Fetch AI Recommendations for 4 key Indian crops
                 try {
-                    const riceRec = await geminiService.getSellRecommendation("Rice");
-                    const wheatRec = await geminiService.getSellRecommendation("Wheat");
-                    setRecommendations({
-                        "Rice": riceRec,
-                        "Wheat": wheatRec
-                    });
+                    const crops = ["Rice", "Wheat", "Maize", "Cotton"];
+                    const recs = {};
+
+                    // Fetch in parallel for speed
+                    await Promise.all(crops.map(async (crop) => {
+                        try {
+                            recs[crop] = await geminiService.getSellRecommendation(crop);
+                        } catch (e) {
+                            recs[crop] = "Recommendation currently unavailable for " + crop;
+                        }
+                    }));
+
+                    setRecommendations(recs);
                 } catch (recErr) {
                     console.error("AI Rec Error:", recErr);
                     setRecommendations({
@@ -194,19 +202,21 @@ export default function Dashboard() {
                             <span className="bg-green-100 text-green-600 p-2 rounded-xl">✨</span>
                             AI Sell Recommendations
                         </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-6">
                             {Object.entries(recommendations).map(([crop, advice]) => (
                                 <div key={crop} className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow group relative overflow-hidden">
                                     <div className="absolute -right-10 -bottom-10 opacity-5 group-hover:scale-110 transition-transform">
                                         <SproutIcon size={200} />
                                     </div>
-                                    <div className="flex items-center gap-4 mb-4">
+                                    <div className="flex items-center gap-4 mb-6 border-b border-slate-50 pb-4">
                                         <div className="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-600">
                                             <SproutIcon size={24} />
                                         </div>
-                                        <h3 className="text-xl font-bold text-slate-800">{crop} Strategy</h3>
+                                        <h3 className="text-2xl font-black text-slate-800">{crop} Strategy</h3>
                                     </div>
-                                    <p className="text-slate-600 leading-relaxed text-lg">{advice}</p>
+                                    <div className="prose-green max-w-none text-slate-600 leading-relaxed text-lg">
+                                        <ReactMarkdown>{advice}</ReactMarkdown>
+                                    </div>
                                 </div>
                             ))}
                             {Object.keys(recommendations).length === 0 && !loading && (
@@ -219,6 +229,53 @@ export default function Dashboard() {
 
                 </div>
             </main>
+
+            <style>{`
+                .prose-green h3 {
+                    font-size: 1.25rem;
+                    font-weight: 800;
+                    color: #1b5e20;
+                    margin-top: 1.5rem;
+                    margin-bottom: 0.75rem;
+                }
+                .prose-green table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 1.5rem 0;
+                    font-size: 0.95rem;
+                    border: 1px solid #e2e8f0;
+                }
+                .prose-green th {
+                    background-color: #f8fafc;
+                    color: #475569;
+                    text-align: left;
+                    padding: 12px;
+                    border-bottom: 2px solid #e2e8f0;
+                }
+                .prose-green td {
+                    padding: 12px;
+                    border-bottom: 1px solid #f1f5f9;
+                }
+                .prose-green tr:hover {
+                    background-color: #f8fafc;
+                }
+                .prose-green p {
+                    margin-bottom: 1.25rem;
+                }
+                .prose-green ul {
+                    list-style-type: disc;
+                    padding-left: 1.5rem;
+                    margin-bottom: 1.25rem;
+                }
+                .prose-green li {
+                    margin-bottom: 0.5rem;
+                }
+                .prose-green hr {
+                    margin: 2rem 0;
+                    border: 0;
+                    border-top: 1px solid #e2e8f0;
+                }
+            `}</style>
         </div>
     );
 }
