@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
+
 import SideMenu from '../../components/SideMenu';
 import PriceChart from '../../components/PriceChart';
 import { climateService } from '../../services/climateService';
 import { geminiService } from '../../services/geminiService';
-import { auth } from '../../services/firebaseConfig';
+import { auth, db } from '../../services/firebaseConfig';
+
 import { Thermometer, Droplets, Wind, CloudRain, AlertTriangle, ExternalLink, UserCheck } from 'lucide-react';
 
 export default function Dashboard() {
@@ -16,29 +19,45 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Get registration data from Navigation state (Step 5)
-    const registrationData = location.state || { state: "N/A", city: "N/A", mandal: "N/A" };
+    // Get registration data from Navigation state (passed during first signup redirect)
+    const navData = location.state;
 
     useEffect(() => {
         const loadData = async () => {
             try {
                 const currentUser = auth.currentUser;
-                if (!currentUser && !localStorage.getItem('user_session')) {
+                if (!currentUser) {
                     navigate('/login');
                     return;
                 }
 
+                // If we don't have navData (e.g. on refresh), fetch from Firestore
+                let city = navData?.city;
+                let state = navData?.state;
+                let mandal = navData?.mandal;
+
+                if (!city || city === "N/A") {
+                    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+                    if (userDoc.exists()) {
+                        const data = userDoc.data();
+                        city = data.city || data.district || "N/A";
+                        state = data.state || "N/A";
+                        mandal = data.mandal || "N/A";
+                    }
+                }
+
                 const userData = {
-                    name: currentUser?.displayName || "Farmer",
-                    email: currentUser?.email,
-                    city: registrationData.city,
-                    state: registrationData.state,
-                    mandal: registrationData.mandal
+                    name: currentUser.displayName || "Farmer",
+                    email: currentUser.email,
+                    city,
+                    state,
+                    mandal
                 };
                 setUser(userData);
 
                 // Fetch weather with the localized city
-                const w = await climateService.getWeather(registrationData.city).catch(() => ({
+                const weatherCity = city !== "N/A" ? city : "Delhi"; // Fallback to Delhi for weather if N/A
+                const w = await climateService.getWeather(weatherCity).catch(() => ({
                     temperature: '--', rainfall: '--', humidity: '--', wind: '--', alerts: ['Weather data unavailable']
                 }));
                 setWeather(w);
@@ -52,8 +71,16 @@ export default function Dashboard() {
             }
         };
 
-        loadData();
-    }, [navigate, registrationData.city, registrationData.state, registrationData.mandal]);
+        if (auth.currentUser || localStorage.getItem('user_session')) {
+            loadData();
+        } else {
+            const unsubscribe = auth.onAuthStateChanged((u) => {
+                if (u) loadData();
+                else navigate('/login');
+            });
+            return () => unsubscribe();
+        }
+    }, [navigate, navData]);
 
     if (loading) return (
         <div className="flex flex-col items-center justify-center h-screen bg-slate-50">

@@ -1,14 +1,17 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    apiKey: "AIzaSyDETBYXXyucEW_9Quv1-dp6ZL-G3VEjWY4",
+    authDomain: "agrotech-ai-97ba9.firebaseapp.com",
+    projectId: "agrotech-ai-97ba9",
+    storageBucket: "agrotech-ai-97ba9.firebasestorage.app",
+    messagingSenderId: "720256880480",
+    appId: "1:720256880480:web:d646790e7e56cab39dd805"
 };
+
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+export const db = getFirestore(app);

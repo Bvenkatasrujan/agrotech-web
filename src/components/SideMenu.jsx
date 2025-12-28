@@ -2,18 +2,26 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Home, TrendingUp, User, LogOut, Sprout, ChevronLeft } from 'lucide-react';
 import { dataService } from '../services/dataService';
 
+import { auth } from '../services/firebaseConfig';
+
 export default function SideMenu({ user }) {
     const navigate = useNavigate();
 
-    const handleLogout = () => {
-        dataService.logout();
-        window.location.href = '/login';
+    const handleLogout = async () => {
+        try {
+            await auth.signOut();
+            dataService.logout();
+            window.location.href = '/login';
+        } catch (error) {
+            console.error("Logout Error:", error);
+        }
     };
+
 
     return (
         <div className="w-64 bg-agri-green h-screen flex flex-col text-white fixed left-0 top-0">
             <div className="p-6 flex items-center gap-3 border-b border-green-700">
-                <Link to="/" className="p-1 hover:bg-green-700 rounded-full transition" title="Back to Home">
+                <Link to="/home" className="p-1 hover:bg-green-700 rounded-full transition" title="Back to Home Website">
                     <ChevronLeft className="w-6 h-6" />
                 </Link>
                 <Sprout className="w-8 h-8" />
@@ -34,7 +42,6 @@ export default function SideMenu({ user }) {
 
             <nav className="flex-1 p-4 space-y-2">
                 <NavItem to="/dashboard" icon={<Home />} label="Dashboard" active={location.pathname === '/dashboard'} />
-                <NavItem to="/home" icon={<TrendingUp />} label="Home Website" />
                 <NavItem to="/profile" icon={<User />} label="Profile" active={location.pathname === '/profile'} />
             </nav>
 

@@ -66,7 +66,7 @@ export default function Navbar() {
                                         </div>
                                         <div className="text-left leading-none">
                                             <span className="block text-xs text-green-200">Hello,</span>
-                                            <span className="block text-sm font-bold">{user.name.split(' ')[0]}</span>
+                                            <span className="block text-sm font-bold">{(user?.name || user?.displayName || 'User').split(' ')[0]}</span>
                                         </div>
                                     </Link>
                                     <button

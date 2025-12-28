@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
-import RegistrationDetails from './pages/auth/RegistrationDetails';
+
 import Dashboard from './pages/dashboard/Dashboard';
 import Profile from './pages/dashboard/Profile';
 import LandingPage from './pages/LandingPage';
@@ -27,9 +26,7 @@ function App() {
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/home" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
 
-          <Route path="/registration-details" element={<RegistrationDetails />} />
 
           {/* Protected Routes */}
           <Route
