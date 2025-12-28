@@ -23,7 +23,7 @@ function App() {
 
       <Router>
         <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/home" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
 

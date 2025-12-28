@@ -35,10 +35,10 @@ export default function Navbar() {
                 <div className="flex items-center justify-between h-16">
 
                     {/* Logo Section */}
-                    <Link to="/" className="flex items-center gap-2 font-bold text-xl hover:text-green-200 transition">
+                    <div className="flex items-center gap-2 font-bold text-xl select-none cursor-default">
                         <Sprout className="w-7 h-7" />
-                        <span className="tracking-wide">AgroTech AI</span>
-                    </Link>
+                        <span className="tracking-wide text-white">AgroTech AI</span>
+                    </div>
 
                     {/* Desktop Nav */}
                     <div className="hidden md:flex items-center space-x-1">
