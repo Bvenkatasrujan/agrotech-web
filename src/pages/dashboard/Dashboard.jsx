@@ -62,45 +62,36 @@ export default function Dashboard() {
                     temperature: '--', rainfall: '--', humidity: '--', wind: '--', alerts: ['Weather data unavailable']
                 }));
                 setWeather(w);
+                setLoading(false); // Render dashboard immediately after weather/user profile loads
 
-                // Fetch AI Recommendations with Quota Management (Sequential + Caching)
-                try {
-                    const CACHE_KEY = 'ai_recommendations_cache';
-                    const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
+                // Load AI in background without awaiting to prevent hang
+                const loadAI = async () => {
+                    try {
+                        const CACHE_KEY = 'ai_recommendations_cache';
+                        const CACHE_EXPIRY = 24 * 60 * 60 * 1000;
+                        const cachedData = JSON.parse(localStorage.getItem(CACHE_KEY));
 
-                    const cachedData = JSON.parse(localStorage.getItem(CACHE_KEY));
-                    if (cachedData && (Date.now() - cachedData.timestamp < CACHE_EXPIRY)) {
-                        setRecommendations(cachedData.data);
-                    } else {
-                        const crops = ["Rice", "Wheat", "Maize", "Cotton"];
-                        const recs = {};
-
-                        // Sequential fetch to avoid 429 errors
-                        for (const crop of crops) {
-                            try {
-                                recs[crop] = await geminiService.getSellRecommendation(crop);
-                                await new Promise(r => setTimeout(r, 2000)); // 2s gap
-                            } catch (e) {
-                                recs[crop] = "Advice temporarily unavailable.";
+                        if (cachedData && (Date.now() - cachedData.timestamp < CACHE_EXPIRY)) {
+                            setRecommendations(cachedData.data);
+                        } else {
+                            const crops = ["Rice", "Wheat", "Maize", "Cotton"];
+                            const recs = {};
+                            for (const crop of crops) {
+                                try {
+                                    recs[crop] = await geminiService.getSellRecommendation(crop);
+                                    await new Promise(r => setTimeout(r, 2000));
+                                } catch (e) { recs[crop] = "Advice temporarily unavailable."; }
                             }
+                            setRecommendations(recs);
+                            localStorage.setItem(CACHE_KEY, JSON.stringify({ data: recs, timestamp: Date.now() }));
                         }
+                    } catch (e) { console.error("AI Background Error:", e); }
+                };
+                loadAI();
 
-                        setRecommendations(recs);
-                        localStorage.setItem(CACHE_KEY, JSON.stringify({
-                            data: recs,
-                            timestamp: Date.now()
-                        }));
-                    }
-                } catch (recErr) {
-                    console.error("AI Rec Error:", recErr);
-                    setRecommendations({
-                        "General": "AI insights currently unavailable. Please check back later."
-                    });
-                }
             } catch (err) {
                 console.error("Dashboard Load Error:", err);
                 setError("Something went wrong while loading your dashboard.");
-            } finally {
                 setLoading(false);
             }
         };
