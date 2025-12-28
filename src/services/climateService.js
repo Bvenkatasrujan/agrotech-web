@@ -49,7 +49,8 @@ export const climateService = {
             }
 
             return {
-                temp: Math.round(weatherData.current.temperature_2m),
+                temperature: Math.round(weatherData.current.temperature_2m),
+                rainfall: weatherData.current.precipitation || 0,
                 condition: interpretWmoCode(weatherData.daily.weather_code[0]),
                 humidity: weatherData.current.relative_humidity_2m,
                 wind: Math.round(weatherData.current.wind_speed_10m),
