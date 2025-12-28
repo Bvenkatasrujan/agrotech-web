@@ -62,7 +62,20 @@ export default function Dashboard() {
                 }));
                 setWeather(w);
 
-                setRecommendations({});
+                // Fetch AI Recommendations for common crops in India
+                try {
+                    const riceRec = await geminiService.getSellRecommendation("Rice");
+                    const wheatRec = await geminiService.getSellRecommendation("Wheat");
+                    setRecommendations({
+                        "Rice": riceRec,
+                        "Wheat": wheatRec
+                    });
+                } catch (recErr) {
+                    console.error("AI Rec Error:", recErr);
+                    setRecommendations({
+                        "General": "AI insights currently unavailable. Please check back later."
+                    });
+                }
             } catch (err) {
                 console.error("Dashboard Load Error:", err);
                 setError("Something went wrong while loading your dashboard.");
