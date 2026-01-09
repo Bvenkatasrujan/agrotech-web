@@ -9,6 +9,7 @@ import {
     GoogleAuthProvider,
     signInWithPopup
 } from "firebase/auth";
+import ReCAPTCHA from "react-google-recaptcha";
 import { auth, db } from '../../services/firebaseConfig';
 import { doc, setDoc, getDoc } from "firebase/firestore";
 
@@ -32,8 +33,15 @@ export default function Login() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [verificationSent, setVerificationSent] = useState(false);
+    const [captchaVal, setCaptchaVal] = useState(null);
 
     const navigate = useNavigate();
+    const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || "6LcliUUsAAAAAJoTC5VO7xFho7Mywbe2GHRQeeo1";
+
+    // Debugging: Check if key is loaded
+    if (!siteKey) {
+        console.error("Error: VITE_RECAPTCHA_SITE_KEY is missing/undefined in .env");
+    }
 
 
     // Derived data for location selection
@@ -89,6 +97,12 @@ export default function Login() {
         setLoading(true);
         setError('');
         setShowResend(false);
+
+        if (!captchaVal) {
+            setError("Please verify you are not a robot.");
+            setLoading(false);
+            return;
+        }
 
         try {
             const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
@@ -149,6 +163,11 @@ export default function Login() {
 
 
             setError("Please fill all details");
+            return;
+        }
+
+        if (!captchaVal) {
+            setError("Please verify you are not a robot.");
             return;
         }
 
@@ -372,6 +391,17 @@ export default function Login() {
                                     >
                                         {loading ? <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : 'Log In'}
                                     </button>
+
+                                    <div className="flex justify-center mt-4">
+                                        {siteKey ? (
+                                            <ReCAPTCHA
+                                                sitekey={siteKey}
+                                                onChange={setCaptchaVal}
+                                            />
+                                        ) : (
+                                            <p className="text-red-500 text-xs">Error: reCAPTCHA key missing</p>
+                                        )}
+                                    </div>
                                 </form>
                             </div>
                         ) : (
@@ -458,6 +488,17 @@ export default function Login() {
                                                 </>
                                             )}
                                         </button>
+
+                                        <div className="flex justify-center mt-4">
+                                            {siteKey ? (
+                                                <ReCAPTCHA
+                                                    sitekey={siteKey}
+                                                    onChange={setCaptchaVal}
+                                                />
+                                            ) : (
+                                                <p className="text-red-500 text-xs">Error: reCAPTCHA key missing</p>
+                                            )}
+                                        </div>
 
                                     </form>
                                 ) : (
@@ -546,7 +587,7 @@ export default function Login() {
                         <p className="mt-8 text-center text-sm text-gray-500 font-medium">
                             {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
                             <button
-                                onClick={() => { setIsLogin(!isLogin); setStep(1); setError(''); }}
+                                onClick={() => { setIsLogin(!isLogin); setStep(1); setError(''); setCaptchaVal(null); }}
                                 className="text-[#1b5e20] font-bold hover:underline underline-offset-4"
                             >
                                 {isLogin ? 'Sign Up' : 'Log In'}
