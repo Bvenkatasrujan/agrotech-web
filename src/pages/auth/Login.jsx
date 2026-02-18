@@ -293,7 +293,7 @@ export default function Login() {
                             </button>
                         )}
                         <div className="flex items-center gap-2 ml-auto">
-                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">AgroTech AI</span>
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">AGROTECH AI</span>
                         </div>
                     </div>
 
@@ -603,7 +603,7 @@ export default function Login() {
 
                     <div className="relative z-10 self-end text-right">
                         <div className="flex items-center gap-2 justify-end text-white mb-1">
-                            <span className="text-2xl font-black tracking-tight">AgroTech AI</span>
+                            <span className="text-2xl font-black tracking-tight">AGROTECH AI</span>
                         </div>
                         <p className="text-white/60 text-xs font-medium tracking-widest uppercase">( PRO VERSION )</p>
                     </div>

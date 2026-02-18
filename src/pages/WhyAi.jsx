@@ -56,7 +56,7 @@ export default function WhyAi() {
                             <ApplicationCard
                                 title="Crop Monitoring"
                                 desc="AI technologies like computer vision and machine learning can detect diseases in crops at an early stage, allowing for timely intervention."
-                                image="https://images.unsplash.com/photo-1530507629858-e49769f748f9?auto=format&fit=crop&q=80&w=800"
+                                image="https://images.unsplash.com/photo-1591851395349-1d2f73d84382?auto=format&fit=crop&q=80&w=800"
                                 icon={<Sprout className="text-green-600" />}
                             />
                             <ApplicationCard
@@ -80,13 +80,13 @@ export default function WhyAi() {
                             <ApplicationCard
                                 title="Smart Irrigation Systems"
                                 desc="AI-powered smart irrigation systems analyze soil moisture levels, weather forecasts, and crop water requirements to optimize irrigation schedules, conserving water resources and improving crop yield."
-                                image="https://images.unsplash.com/photo-1563514227147-6d2ff63448fe?auto=format&fit=crop&q=80&w=800"
+                                image="https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?auto=format&fit=crop&q=80&w=800"
                                 icon={<Zap className="text-yellow-600" />}
                             />
                             <ApplicationCard
                                 title="Robotics and Automation"
                                 desc="Robotic systems powered by AI can perform tasks such as planting and harvesting, improving precision and reducing labor costs."
-                                image="https://images.unsplash.com/photo-1530266014522-683a4f66cf01?auto=format&fit=crop&q=80&w=800" // Robot arm in greenhouse
+                                image="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&q=80&w=800" // Robot arm in greenhouse
                                 icon={<Bot className="text-gray-600" />}
                             />
                         </div>

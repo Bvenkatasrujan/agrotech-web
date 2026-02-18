@@ -15,16 +15,49 @@ import WhyAi from './pages/WhyAi';
 import Help from './pages/Help';
 
 
+import { useState, useEffect } from 'react';
+
+import { auth } from './services/firebaseConfig';
+import { onAuthStateChanged } from 'firebase/auth';
+
 function App() {
-  const isAuthenticated = localStorage.getItem('user_session') !== null;
+  const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem('user_session') !== null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsAuthenticated(true);
+        // Sync with localStorage if needed by other components
+        localStorage.setItem('user_session', JSON.stringify(user));
+      } else {
+        setIsAuthenticated(false);
+        localStorage.removeItem('user_session');
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-green-50">
+        <div className="w-12 h-12 border-4 border-green-200 border-t-green-600 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <>
 
       <Router>
         <Routes>
-          <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="/home" element={<LandingPage />} />
+          <Route path="/" element={isAuthenticated ? <Navigate to="/home" replace /> : <Navigate to="/login" replace />} />
+          <Route
+            path="/home"
+            element={isAuthenticated ? <LandingPage /> : <Navigate to="/login" />}
+          />
           <Route path="/login" element={<Login />} />
 
 
@@ -38,16 +71,16 @@ function App() {
             element={isAuthenticated ? <Profile /> : <Navigate to="/login" />}
           />
 
-          {/* Feature Pages (Accessible to all for prototype, or protect if needed) */}
-          <Route path="/crop-recommendation" element={<CropRecommendation />} />
-          <Route path="/fertilizer-recommendation" element={<FertilizerRecommendation />} />
-          <Route path="/soil-quality" element={<SoilQuality />} />
-          <Route path="/price-prediction" element={<PricePrediction />} />
-          <Route path="/forecast" element={<Forecast />} />
-          <Route path="/disease-detection" element={<DiseaseDetection />} />
-          <Route path="/about" element={<AboutUs />} />
-          <Route path="/why-ai" element={<WhyAi />} />
-          <Route path="/help" element={<Help />} />
+          {/* Feature Pages (Protected) */}
+          <Route path="/crop-recommendation" element={isAuthenticated ? <CropRecommendation /> : <Navigate to="/login" />} />
+          <Route path="/fertilizer-recommendation" element={isAuthenticated ? <FertilizerRecommendation /> : <Navigate to="/login" />} />
+          <Route path="/soil-quality" element={isAuthenticated ? <SoilQuality /> : <Navigate to="/login" />} />
+          <Route path="/price-prediction" element={isAuthenticated ? <PricePrediction /> : <Navigate to="/login" />} />
+          <Route path="/forecast" element={isAuthenticated ? <Forecast /> : <Navigate to="/login" />} />
+          <Route path="/disease-detection" element={isAuthenticated ? <DiseaseDetection /> : <Navigate to="/login" />} />
+          <Route path="/about" element={isAuthenticated ? <AboutUs /> : <Navigate to="/login" />} />
+          <Route path="/why-ai" element={isAuthenticated ? <WhyAi /> : <Navigate to="/login" />} />
+          <Route path="/help" element={isAuthenticated ? <Help /> : <Navigate to="/login" />} />
 
         </Routes>
       </Router>

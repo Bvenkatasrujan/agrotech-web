@@ -149,7 +149,7 @@ export default function DiseaseDetection() {
                         <h2 className="text-2xl font-bold text-gray-800 mb-4">Crop Disease Detection Model</h2>
                         <div className="flex flex-col md:flex-row gap-6 items-center">
                             {/* Use a placeholder if local image is missing, or keep the original src if valid */}
-                            <img src="https://images.unsplash.com/photo-1518133524584-39908354c25f?auto=format&fit=crop&q=80&w=400" alt="Disease Detection" className="w-32 h-32 object-cover rounded-lg shadow-sm" />
+                            <img src="https://images.unsplash.com/photo-1596434446698-0c68615c10ea?auto=format&fit=crop&q=80&w=800" alt="Disease Detection" className="w-32 h-32 object-cover rounded-lg shadow-sm" />
                             <div>
                                 <p className="text-gray-600 leading-relaxed">
                                     The Crop Disease Detection System uses image processing and artificial intelligence to identify plant diseases at an early stage.

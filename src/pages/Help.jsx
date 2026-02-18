@@ -141,7 +141,7 @@ export default function Help() {
                                     <Bot size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-gray-800">AgriTech AI Assistant</h3>
+                                    <h3 className="font-bold text-gray-800">AGROTECH AI Assistant</h3>
                                     <p className="text-xs text-green-600 font-medium">Online • Expert Knowledge Hub</p>
                                 </div>
                             </div>

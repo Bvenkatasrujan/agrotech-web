@@ -4,6 +4,8 @@ import { dataService } from '../services/dataService';
 
 import { auth } from '../services/firebaseConfig';
 
+import logo from '../assets/logo.svg';
+
 export default function SideMenu({ user }) {
     const navigate = useNavigate();
 
@@ -11,7 +13,7 @@ export default function SideMenu({ user }) {
         try {
             await auth.signOut();
             dataService.logout();
-            window.location.href = '/login';
+            navigate('/login');
         } catch (error) {
             console.error("Logout Error:", error);
         }
@@ -24,8 +26,10 @@ export default function SideMenu({ user }) {
                 <Link to="/home" className="p-1 hover:bg-green-700 rounded-full transition" title="Back to Home Website">
                     <ChevronLeft className="w-6 h-6" />
                 </Link>
-                <Sprout className="w-8 h-8" />
-                <span className="font-bold text-xl">Agritech AI</span>
+                <div className="w-10 h-10 bg-white rounded-full p-1 shadow-inner overflow-hidden">
+                    <img src={logo} alt="Logo" className="w-full h-full object-contain" />
+                </div>
+                <span className="font-bold text-xl uppercase tracking-tighter">AGROTECH AI</span>
             </div>
 
             <div className="p-6 border-b border-green-700 bg-green-800">
