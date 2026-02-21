@@ -1,14 +1,17 @@
 import { useState } from 'react';
 import Navbar from '../../components/Navbar';
 import { diseaseService } from '../../services/diseaseService';
-import { Bug, Loader, Upload, CheckCircle, AlertTriangle, RefreshCw } from 'lucide-react';
+import { geminiService } from '../../services/geminiService';
+import { Bug, Loader, Upload, CheckCircle, AlertTriangle, RefreshCw, ClipboardList, ShieldCheck } from 'lucide-react';
 
 export default function DiseaseDetection() {
     const [image, setImage] = useState(null);
     const [imageFile, setImageFile] = useState(null);
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [solutionLoading, setSolutionLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [solution, setSolution] = useState('');
 
     const handleImageUpload = (e) => {
         if (e.target.files && e.target.files[0]) {
@@ -16,6 +19,7 @@ export default function DiseaseDetection() {
             setImage(URL.createObjectURL(file));
             setImageFile(file);
             setResult(null); // Clear previous results
+            setSolution('');
             setError(null);
         }
     };
@@ -39,12 +43,28 @@ export default function DiseaseDetection() {
                 // Get top suggestion
                 const topDisease = diseases && diseases.length > 0 ? diseases[0] : null;
 
-                setResult({
+                const analysisResult = {
                     isHealthy: isHealthy,
                     diseaseName: topDisease ? topDisease.name : "Unknown",
                     probability: topDisease ? (topDisease.probability * 100).toFixed(1) : 0,
                     details: topDisease ? topDisease.details : null
-                });
+                };
+
+                setResult(analysisResult);
+
+                // If disease detected, fetch solution from Gemini
+                if (!isHealthy && analysisResult.diseaseName !== "Unknown") {
+                    setSolutionLoading(true);
+                    try {
+                        const advice = await geminiService.getDiseaseSolution(analysisResult.diseaseName);
+                        setSolution(advice);
+                    } catch (aiErr) {
+                        console.error("Gemini Error:", aiErr);
+                        setSolution("Consult an expert for treatment recommendations.");
+                    } finally {
+                        setSolutionLoading(false);
+                    }
+                }
             } else {
                 throw new Error("Invalid response from server");
             }
@@ -117,25 +137,48 @@ export default function DiseaseDetection() {
                                 {!result.isHealthy && (
                                     <>
                                         <h3 className="text-2xl font-bold text-gray-800 mb-2">{result.diseaseName}</h3>
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                                        <div className="flex items-center gap-2 mb-6">
+                                            <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
                                                 <div
-                                                    className="h-full bg-red-500 rounded-full"
+                                                    className={`h-full rounded-full transition-all duration-1000 ${parseFloat(result.probability) > 70 ? 'bg-red-500' : 'bg-amber-500'}`}
                                                     style={{ width: `${result.probability}%` }}
                                                 ></div>
                                             </div>
-                                            <span className="text-sm font-bold text-gray-600">{result.probability}%</span>
+                                            <span className="text-sm font-bold text-gray-600 whitespace-nowrap">{result.probability}% Confidence</span>
                                         </div>
 
-                                        <div className="p-4 bg-red-50 rounded-lg border border-red-100 text-red-800 text-sm">
-                                            <strong>Note:</strong> This is an AI-generated diagnosis. Please consult an agricultural expert for confirmation and treatment planning.
+                                        {solutionLoading ? (
+                                            <div className="p-8 flex flex-col items-center justify-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                                <div className="h-8 w-8 border-4 border-[#1b5e20]/20 border-t-[#1b5e20] rounded-full animate-spin mb-4"></div>
+                                                <p className="text-gray-500 font-medium text-sm">Generating Treatment Plan...</p>
+                                            </div>
+                                        ) : solution && (
+                                            <div className="space-y-4">
+                                                <div className="bg-green-50/50 p-5 rounded-xl border border-green-100">
+                                                    <div className="flex items-center gap-2 mb-3 text-[#1b5e20]">
+                                                        <ClipboardList className="w-5 h-5" />
+                                                        <h4 className="font-bold">Treatment & Prevention</h4>
+                                                    </div>
+                                                    <div className="prose prose-sm max-w-none text-gray-700 text-xs leading-relaxed">
+                                                        <div dangerouslySetInnerHTML={{ __html: solution.replace(/\n/g, '<br/>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>') }} />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-100 text-amber-800 text-xs flex gap-3">
+                                            <ShieldCheck className="w-5 h-5 shrink-0" />
+                                            <p>
+                                                <strong>AI Disclaimer:</strong> This diagnosis and treatment plan is AI-generated for educational purposes. Verify with a local agricultural extension officer or expert before applying chemicals.
+                                            </p>
                                         </div>
                                     </>
                                 )}
 
                                 {result.isHealthy && (
-                                    <div className="p-4 bg-green-50 rounded-lg border border-green-100 text-green-800 text-sm">
-                                        Your plant appears to be healthy! Keep up the good work with regular monitoring and care.
+                                    <div className="p-4 bg-green-50 rounded-lg border border-green-100 text-green-800 text-sm flex gap-3">
+                                        <CheckCircle className="w-5 h-5 shrink-0" />
+                                        <p>Your plant appears to be healthy! Keep up the good work with regular monitoring and proper nutrition.</p>
                                     </div>
                                 )}
                             </div>

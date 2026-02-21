@@ -6,6 +6,7 @@ import {
     createUserWithEmailAndPassword,
     sendEmailVerification,
     updateProfile,
+    sendPasswordResetEmail,
     GoogleAuthProvider,
     signInWithPopup
 } from "firebase/auth";
@@ -34,6 +35,10 @@ export default function Login() {
     const [error, setError] = useState('');
     const [verificationSent, setVerificationSent] = useState(false);
     const [captchaVal, setCaptchaVal] = useState(null);
+    const [emailRisk, setEmailRisk] = useState({ score: 0, status: '', message: '' });
+    const [validatingEmail, setValidatingEmail] = useState(false);
+    const [isForgotPassword, setIsForgotPassword] = useState(false);
+    const [resetLinkSent, setResetLinkSent] = useState(false);
 
     const navigate = useNavigate();
     const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY || "6LcliUUsAAAAAJoTC5VO7xFho7Mywbe2GHRQeeo1";
@@ -58,6 +63,39 @@ export default function Login() {
             // No action needed yet, but could reset child selections
         }
     }, [formData.state, formData.district]);
+
+    const validateEmailWithBackend = async (email) => {
+        if (!email || !email.includes('@')) return;
+
+        setValidatingEmail(true);
+        try {
+            const response = await fetch('http://localhost:5000/auth/validate-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            });
+            const data = await response.json();
+            setEmailRisk({
+                score: data.score,
+                status: data.status,
+                message: data.message
+            });
+
+            if (data.status === 'blocked' || data.status === 'invalid') {
+                setError(data.message);
+            } else if (data.status === 'suspicious') {
+                // We show suspicious but don't strictly block unless score is very high
+                // Or we can let them proceed but with a warning
+            } else {
+                if (error === data.message) setError('');
+            }
+        } catch (err) {
+            console.error("Email validation failed:", err);
+            // Fallback: don't block if backend is down
+        } finally {
+            setValidatingEmail(false);
+        }
+    };
 
     const handleGoogleLogin = async () => {
         const provider = new GoogleAuthProvider();
@@ -152,6 +190,37 @@ export default function Login() {
             setShowResend(false);
         } catch (err) {
             setError("Could not resend link. " + err.message.replace('Firebase: ', ''));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleForgotPassword = async (e) => {
+        e.preventDefault();
+        setError('');
+
+        if (!formData.email) {
+            setError("Please enter your email address.");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            // Re-validate email risk if not already done
+            if (!emailRisk.status || emailRisk.score === 0) {
+                await validateEmailWithBackend(formData.email);
+            }
+
+            if (emailRisk.status === 'blocked' || emailRisk.score > 0.8) {
+                setError("Suspicious activity detected. Reset link cannot be sent to this email.");
+                setLoading(false);
+                return;
+            }
+
+            await sendPasswordResetEmail(auth, formData.email);
+            setResetLinkSent(true);
+        } catch (err) {
+            setError(err.message.replace('Firebase: ', ''));
         } finally {
             setLoading(false);
         }
@@ -284,14 +353,22 @@ export default function Login() {
                     <div className="md:hidden absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-full -translate-y-16 translate-x-16 blur-2xl"></div>
 
                     <div className="mb-8 flex items-center justify-between z-10">
-                        {(!isLogin && step === 2) && (
+                        {(!isLogin && step === 2) || isForgotPassword ? (
                             <button
-                                onClick={() => setStep(1)}
+                                onClick={() => {
+                                    if (isForgotPassword) {
+                                        setIsForgotPassword(false);
+                                        setResetLinkSent(false);
+                                    } else {
+                                        setStep(1);
+                                    }
+                                    setError('');
+                                }}
                                 className="flex items-center gap-1 text-sm font-bold text-[#1b5e20] hover:bg-green-50 px-3 py-1.5 rounded-lg transition-all"
                             >
                                 <ArrowLeft className="w-4 h-4" /> Back
                             </button>
-                        )}
+                        ) : null}
                         <div className="flex items-center gap-2 ml-auto">
                             <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">AGROTECH AI</span>
                         </div>
@@ -304,16 +381,99 @@ export default function Login() {
 
                         <header className="mb-8">
                             <h1 className="text-4xl font-extrabold text-[#111827]">
-                                {isLogin ? 'Log In' : (step === 1 ? 'Sign Up' : 'Location')}
+                                {isForgotPassword ? 'Reset Password' : (isLogin ? 'Log In' : (step === 1 ? 'Sign Up' : 'Location'))}
                             </h1>
                             <p className="text-gray-500 font-medium mt-2">
-                                {isLogin
-                                    ? 'Welcome back! Please enter your details.'
-                                    : (step === 1 ? 'Start your journey with us.' : 'Help us localize your advice.')}
+                                {isForgotPassword
+                                    ? 'Enter your email to receive a reset link.'
+                                    : (isLogin
+                                        ? 'Welcome back! Please enter your details.'
+                                        : (step === 1 ? 'Start your journey with us.' : 'Help us localize your advice.'))}
                             </p>
                         </header>
 
-                        {isLogin ? (
+                        {isForgotPassword ? (
+                            <div className="space-y-6">
+                                {resetLinkSent ? (
+                                    <div className="text-center animate-in fade-in zoom-in duration-300">
+                                        <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                            <CheckCircle2 className="w-8 h-8" />
+                                        </div>
+                                        <h3 className="text-xl font-bold text-gray-900 mb-2">Check your inbox</h3>
+                                        <p className="text-gray-500 text-sm mb-8">
+                                            We've sent a password reset link to <br /><span className="font-bold text-gray-900">{formData.email}</span>
+                                        </p>
+                                        <button
+                                            onClick={() => {
+                                                setIsForgotPassword(false);
+                                                setIsLogin(true);
+                                                setResetLinkSent(false);
+                                            }}
+                                            className="w-full bg-[#1b5e20] text-white font-bold py-4 rounded-xl shadow-lg hover:bg-[#154d1a] transition-all"
+                                        >
+                                            Back to Log In
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <form onSubmit={handleForgotPassword} className="space-y-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-sm font-semibold text-gray-700 ml-1">Email Address</label>
+                                            <div className="relative">
+                                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                <input
+                                                    type="email"
+                                                    placeholder="Enter your email"
+                                                    required
+                                                    className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border ${emailRisk.score > 0.7 ? 'border-red-500' : 'border-gray-200'} rounded-xl focus:ring-4 focus:ring-green-500/10 focus:border-[#1b5e20] focus:bg-white outline-none transition-all`}
+                                                    value={formData.email}
+                                                    onChange={e => {
+                                                        setFormData({ ...formData, email: e.target.value });
+                                                        if (emailRisk.status) setEmailRisk({ score: 0, status: '', message: '' });
+                                                    }}
+                                                    onBlur={e => validateEmailWithBackend(e.target.value)}
+                                                />
+                                                {validatingEmail && (
+                                                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                                        <div className="h-4 w-4 border-2 border-green-600/30 border-t-green-600 rounded-full animate-spin"></div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {emailRisk.status && (
+                                                <div className="mt-2 px-1">
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Email Risk Score</span>
+                                                        <span className={`text-[10px] font-bold ${emailRisk.score > 0.7 ? 'text-red-600' : 'text-green-600'}`}>
+                                                            {Math.round(emailRisk.score * 100)}%
+                                                        </span>
+                                                    </div>
+                                                    <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                                                        <div
+                                                            className={`h-full transition-all duration-500 ${emailRisk.score > 0.7 ? 'bg-red-500' : emailRisk.score > 0.4 ? 'bg-amber-500' : 'bg-green-500'}`}
+                                                            style={{ width: `${emailRisk.score * 100}%` }}
+                                                        ></div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {error && (
+                                            <div className="flex items-center gap-2 text-red-600 bg-red-50 p-3.5 rounded-xl text-sm border border-red-100 animate-in fade-in slide-in-from-top-1">
+                                                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                                                <p className="font-medium">{error}</p>
+                                            </div>
+                                        )}
+
+                                        <button
+                                            type="submit"
+                                            disabled={loading}
+                                            className="w-full bg-[#1b5e20] text-white font-bold py-4 rounded-xl shadow-lg mt-2 hover:bg-[#154d1a] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                                        >
+                                            {loading ? <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : 'Send Reset Link'}
+                                        </button>
+                                    </form>
+                                )}
+                            </div>
+                        ) : isLogin ? (
                             <div className="space-y-6">
                                 <button
                                     onClick={handleGoogleLogin}
@@ -337,15 +497,52 @@ export default function Login() {
                                                 type="email"
                                                 placeholder="Enter your email"
                                                 required
-                                                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-4 focus:ring-green-500/10 focus:border-[#1b5e20] focus:bg-white outline-none transition-all"
+                                                className={`w-full pl-12 pr-4 py-3.5 bg-gray-50 border ${emailRisk.score > 0.7 ? 'border-red-500' : 'border-gray-200'} rounded-xl focus:ring-4 focus:ring-green-500/10 focus:border-[#1b5e20] focus:bg-white outline-none transition-all`}
                                                 value={formData.email}
-                                                onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                                onChange={e => {
+                                                    setFormData({ ...formData, email: e.target.value });
+                                                    if (emailRisk.status) setEmailRisk({ score: 0, status: '', message: '' });
+                                                }}
+                                                onBlur={e => validateEmailWithBackend(e.target.value)}
                                             />
+                                            {validatingEmail && (
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                                    <div className="h-4 w-4 border-2 border-green-600/30 border-t-green-600 rounded-full animate-spin"></div>
+                                                </div>
+                                            )}
                                         </div>
+                                        {emailRisk.status && (
+                                            <div className="mt-2 px-1">
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Email Risk Score</span>
+                                                    <span className={`text-[10px] font-bold ${emailRisk.score > 0.7 ? 'text-red-600' : 'text-green-600'}`}>
+                                                        {Math.round(emailRisk.score * 100)}%
+                                                    </span>
+                                                </div>
+                                                <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                                                    <div
+                                                        className={`h-full transition-all duration-500 ${emailRisk.score > 0.7 ? 'bg-red-500' : emailRisk.score > 0.4 ? 'bg-amber-500' : 'bg-green-500'}`}
+                                                        style={{ width: `${emailRisk.score * 100}%` }}
+                                                    ></div>
+                                                </div>
+                                                <p className={`text-[10px] mt-1 font-medium ${emailRisk.score > 0.7 ? 'text-red-500' : 'text-gray-400'}`}>
+                                                    {emailRisk.message}
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label className="text-sm font-semibold text-gray-700 ml-1">Password</label>
+                                        <div className="flex justify-between items-center ml-1">
+                                            <label className="text-sm font-semibold text-gray-700">Password</label>
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsForgotPassword(true)}
+                                                className="text-xs font-bold text-[#1b5e20] hover:underline"
+                                            >
+                                                Forgot Password?
+                                            </button>
+                                        </div>
                                         <div className="relative">
                                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                                             <input
@@ -432,11 +629,36 @@ export default function Login() {
                                                     type="email"
                                                     placeholder="Enter email"
                                                     required
-                                                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-[#1b5e20] outline-none transition-all"
+                                                    className={`w-full pl-12 pr-4 py-3 bg-gray-50 border ${emailRisk.score > 0.7 ? 'border-red-500' : 'border-gray-200'} rounded-xl focus:bg-white focus:border-[#1b5e20] outline-none transition-all`}
                                                     value={formData.email}
-                                                    onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                                    onChange={e => {
+                                                        setFormData({ ...formData, email: e.target.value });
+                                                        if (emailRisk.status) setEmailRisk({ score: 0, status: '', message: '' });
+                                                    }}
+                                                    onBlur={e => validateEmailWithBackend(e.target.value)}
                                                 />
+                                                {validatingEmail && (
+                                                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                                        <div className="h-4 w-4 border-2 border-green-600/30 border-t-green-600 rounded-full animate-spin"></div>
+                                                    </div>
+                                                )}
                                             </div>
+                                            {emailRisk.status && (
+                                                <div className="mt-2 px-1">
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Email Risk Score</span>
+                                                        <span className={`text-[10px] font-bold ${emailRisk.score > 0.7 ? 'text-red-600' : 'text-green-600'}`}>
+                                                            {Math.round(emailRisk.score * 100)}%
+                                                        </span>
+                                                    </div>
+                                                    <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                                                        <div
+                                                            className={`h-full transition-all duration-500 ${emailRisk.score > 0.7 ? 'bg-red-500' : emailRisk.score > 0.4 ? 'bg-amber-500' : 'bg-green-500'}`}
+                                                            style={{ width: `${emailRisk.score * 100}%` }}
+                                                        ></div>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div className="space-y-1.5">
@@ -585,12 +807,23 @@ export default function Login() {
                         )}
 
                         <p className="mt-8 text-center text-sm text-gray-500 font-medium">
-                            {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
+                            {isForgotPassword ? "Remembered your password?" : (isLogin ? "Don't have an account?" : "Already have an account?")}{' '}
                             <button
-                                onClick={() => { setIsLogin(!isLogin); setStep(1); setError(''); setCaptchaVal(null); }}
+                                onClick={() => {
+                                    if (isForgotPassword) {
+                                        setIsForgotPassword(false);
+                                        setIsLogin(true);
+                                    } else {
+                                        setIsLogin(!isLogin);
+                                        setStep(1);
+                                    }
+                                    setError('');
+                                    setCaptchaVal(null);
+                                    setResetLinkSent(false);
+                                }}
                                 className="text-[#1b5e20] font-bold hover:underline underline-offset-4"
                             >
-                                {isLogin ? 'Sign Up' : 'Log In'}
+                                {isForgotPassword ? 'Log In' : (isLogin ? 'Sign Up' : 'Log In')}
                             </button>
                         </p>
                     </div>

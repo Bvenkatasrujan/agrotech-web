@@ -118,5 +118,17 @@ export const geminiService = {
       Provide a 2-sentence expert explanation on why "${fertilizer}" is the best fit for these conditions and how it helps the ${data.cropType} plant.
     `;
         return await geminiService.getPrediction(prompt);
+    },
+
+    getDiseaseSolution: async (diseaseName) => {
+        const prompt = `
+            Act as an agricultural expert. A crop disease "${diseaseName}" has been detected.
+            Provide a concise and practical solution to:
+            1. **Treat the problem**: Immediate steps to stop the spread and cure the plants.
+            2. **Prevent future occurrence**: Long-term measures and best practices.
+            
+            Format your response in simple markdown with bullet points. Be very specific to "${diseaseName}".
+        `;
+        return await geminiService.getPrediction(prompt);
     }
 };
