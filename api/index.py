@@ -1,8 +1,15 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import datetime
+import os
+import sys
+
+# Ensure the api directory is in the path for relative imports
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from auth.email_validator import is_valid_email, is_disposable
 from auth.spam_detector import get_spam_score
-import datetime
+
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for React frontend

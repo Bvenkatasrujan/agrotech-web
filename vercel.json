@@ -5,26 +5,26 @@
             "use": "@vercel/static-build"
         },
         {
-            "src": "backend/app.py",
+            "src": "api/index.py",
             "use": "@vercel/python"
         }
     ],
     "rewrites": [
         {
             "source": "/api/(.*)",
-            "destination": "/backend/app.py"
+            "destination": "/api/index.py"
         },
         {
             "source": "/auth/(.*)",
-            "destination": "/backend/app.py"
+            "destination": "/api/index.py"
         },
         {
             "source": "/stats",
-            "destination": "/backend/app.py"
+            "destination": "/api/index.py"
         },
         {
             "source": "/health",
-            "destination": "/backend/app.py"
+            "destination": "/api/index.py"
         },
         {
             "source": "/(.*)",
