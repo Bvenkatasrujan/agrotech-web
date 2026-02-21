@@ -69,7 +69,7 @@ export default function Login() {
 
         setValidatingEmail(true);
         try {
-            const response = await fetch('http://localhost:5000/auth/validate-email', {
+            const response = await fetch('/auth/validate-email', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email })
