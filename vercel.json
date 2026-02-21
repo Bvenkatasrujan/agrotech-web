@@ -23,6 +23,10 @@
             "destination": "/backend/app.py"
         },
         {
+            "source": "/health",
+            "destination": "/backend/app.py"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }
