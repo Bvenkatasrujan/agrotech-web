@@ -59,6 +59,11 @@ def get_stats():
         "recent_blocks": blocked_emails[-5:]
     })
 
+@app.route("/health", methods=["GET"])
+def health_check():
+    return jsonify({"status": "healthy", "timestamp": datetime.datetime.now().isoformat()})
+
+
 def log_blocked_email(email, reason, score):
     blocked_emails.append({
         "email": email,
