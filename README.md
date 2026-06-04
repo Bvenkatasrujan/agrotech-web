@@ -1,16 +1,37 @@
-# React + Vite
+## About AgroTech
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+AgroTech is a modern agricultural technology platform designed to assist farmers with crop management, disease identification, and agricultural decision-making. The platform combines intelligent recommendations with an intuitive user experience to make farming more efficient and accessible.
 
-Currently, two official plugins are available:
+### Vision
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+To empower farmers through technology by providing reliable agricultural insights that improve productivity, sustainability, and crop health.
 
-## React Compiler
+### Key Objectives
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* Improve access to agricultural information.
+* Support data-driven farming decisions.
+* Reduce crop losses caused by diseases and pests.
+* Promote sustainable farming practices.
+* Bridge the gap between technology and agriculture.
 
-## Expanding the ESLint configuration
+### Why AgroTech?
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Agriculture is a critical sector that often faces challenges related to crop diseases, pest infestations, and limited access to timely information. AgroTech addresses these challenges by offering a digital solution that helps farmers make informed decisions quickly and effectively.
+
+### Future Roadmap
+
+* AI-powered crop disease diagnosis
+* Weather forecasting integration
+* Market price monitoring
+* Multilingual support
+* Mobile application development
+* Advanced analytics and reporting
+* IoT-based smart farming integration
+
+### Contribution
+
+Contributions are welcome. Feel free to fork the repository, create a feature branch, and submit a pull request.
+
+### Author
+
+Developed and maintained by Srujan.
